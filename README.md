@@ -147,8 +147,9 @@ graph TD
         Home[Home Module]
         Execution[Execution Module]
     end
-   ``` 
+ 
     Modules --> Core
     Auth --> DioClient
     Home --> BaseRepository
     Execution --> BaseModel
+```
