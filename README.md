@@ -110,46 +110,85 @@ O sistema de mensagens é padronizado através de um *Mixin*. Ele deve ser utili
 Este diagrama mostra a relação do BaseModel com as classes concretas.
 ```mermaid
 classDiagram
+    %% Core
     class BaseModel {
         <<abstract>>
         +int? id
         +DateTime? createdAt
-        +toMap()
-        +toJson()
-    }
-    class OrdemServico {
-        +String cliente
-        +String status
-        +toMap()
-        +toJson()
+        +Map toMap()
+        +Map toJson()
     }
     class BaseRepository {
         <<abstract>>
         +Dio dio
-        +getAll()
-        +delete(int id)
+        +Future~List~T~~ getAll(fromMap)
+        +Future~void~ delete(int id)
     }
- ```   
-    BaseModel <|-- OrdemServico
-    BaseRepository ..> BaseModel : usa <T>
+    class DioClient {
+        <<singleton>>
+        +Dio dio
+        -initInterceptor()
+    }
+
+    %% Features (Concretas)
+    class OrdemServico {
+        +String cliente
+        +String status
+        +toMap()
+    }
+    class OrdemServicoRepository {
+        +getAll()
+    }
+
+    %% Relacionamentos
+    BaseModel <|-- OrdemServico : herda
+    BaseRepository <|-- OrdemServicoRepository : herda
+    OrdemServicoRepository ..> DioClient : usa
+    OrdemServicoRepository ..> OrdemServico : gerencia
+
+```
 
 # Diagramas de componentes
 ```mermaid
 graph TD
-    subgraph Core
-        DioClient[DioClient]
-        BaseRepository[BaseRepository]
-        BaseModel[BaseModel]
+    subgraph UI_Layer [Camada de Apresentação]
+        View[View / Widgets]
+        VM[ViewModel / ChangeNotifiers]
     end
-    
-    subgraph Modules
-        Auth[Auth Module]
-        Home[Home Module]
-        Execution[Execution Module]
+
+    subgraph Domain_Layer [Camada de Domínio]
+        Repo[Repositories]
+        Models[Models / BaseModel]
     end
- 
-    Modules --> Core
-    Auth --> DioClient
-    Home --> BaseRepository
-    Execution --> BaseModel
+
+    subgraph Infrastructure_Layer [Camada de Infra]
+        DioC[DioClient]
+        SQL[SQLite DatabaseHelper]
+        Mixins[UiFeedbackMixin]
+    end
+
+    View --> VM
+    VM --> Repo
+    VM --> Mixins
+    Repo --> Models
+    Repo --> DioC
+    Repo --> SQL
+```
+
+# Fluxo de Dependências (Como o código se conecta)
+```mermaid
+sequenceDiagram
+    participant User
+    participant View
+    participant ViewModel
+    participant Repository
+    participant API/DB
+
+    User->>View: Interage (ex: salvar OS)
+    View->>ViewModel: chama metodo salvarOS()
+    ViewModel->>Repository: repository.create(os)
+    Repository->>API/DB: Dio.post() ou SQLite.insert()
+    API/DB-->>Repository: Sucesso
+    Repository-->>ViewModel: Retorna
+    ViewModel->>View: notifyListeners() + showSuccess()
 ```
