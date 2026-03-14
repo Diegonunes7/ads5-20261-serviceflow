@@ -56,6 +56,21 @@ O fluxo principal envolve a autenticação, sincronização de tarefas pendentes
 ### 1. Diagrama de Componentes
 O sistema é dividido em `Core` (Infraestrutura) e `Modules` (Funcionalidades).
 
+### Fluxo de Dados (Caminho da Informação)
+Toda requisição segue o ciclo:
+```text
+View -> ViewModel -> Repository -> DioClient/SQLite
+```
+
+## 📊 Dicionário de Dados (Base de Dados)
+| Campo | Tipo | Descrição |
+| :--- | :--- | :--- |
+| **id** | INTEGER | Chave Primária |
+| **cliente** | TEXT | Nome do cliente |
+| **status** | TEXT | Pendente/Iniciado/Concluído |
+| **foto_path** | TEXT | Caminho local da imagem |
+| **assinatura** | TEXT | Base64 da assinatura |
+| **created_at** | TEXT | Timestamp ISO8601 |
 
 
 ### 2. Estrutura de Pastas (Padrão Obrigatório)
@@ -93,7 +108,7 @@ O sistema de mensagens é padronizado através de um *Mixin*. Ele deve ser utili
 
 # Diagramas de classes
 Este diagrama mostra a relação do BaseModel com as classes concretas.
-```text
+```mermaid
 classDiagram
     class BaseModel {
         <<abstract>>
@@ -119,7 +134,7 @@ classDiagram
     BaseRepository ..> BaseModel : usa <T>
 
 # Diagramas de componentes
-```text
+```mermaid
 graph TD
     subgraph Core
         DioClient[DioClient]
