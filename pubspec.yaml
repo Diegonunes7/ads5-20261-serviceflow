@@ -1,0 +1,16 @@
+name: Flutter Project
+
+# The following are Flutter SDK constraints and dependencies
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+dependencies:
+  dio: ^latest_stable_version
+  flutter_secure_storage: ^latest_stable_version
+  sqflite: ^latest_stable_version
+  path: ^latest_stable_version
+  path_provider: ^latest_stable_version
+  connectivity_plus: ^latest_stable_version
+  image_picker: ^latest_stable_version
+  signature: ^latest_stable_version
+  url_launcher: ^latest_stable_version
+  intl: ^latest_stable_version
