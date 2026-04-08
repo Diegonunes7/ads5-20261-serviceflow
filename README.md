@@ -76,6 +76,12 @@ classDiagram
         -_addInterceptors()
     }
 
+	class ErrorModel {
+        +int codeErro
+        +String titulo
+        +String mensagem
+    }
+
     class AuthInterceptor {
         +onRequest()
         +onError()
@@ -109,6 +115,7 @@ classDiagram
     BaseRepository <|-- OrdemServicoRepository
     BaseRepository <|-- AuthRepository
     DioClient *-- AuthInterceptor : utiliza
+	DioClient ..> ErrorModel : mapeia em caso de falha
     BaseRepository ..> DioClient : consome
     OrdemServicoRepository ..> OrdemServico : gerencia
 	
@@ -147,6 +154,18 @@ O salvamento inicial deve ser sempre local. A sincronização com a API é uma t
 ## 🛠️ Especificação da API (OpenAPI 3.0)
 Documentação do contrato que o backend deve fornecer para integração plena:
 
+Estrutura de Resposta de Erro (Padronizada)
+Em caso de falha (Status 3XX, 4XX ou 5XX), o backend retornará obrigatoriamente:
+
+```text
+	{
+	  "codeErro": 401,
+	  "titulo": "Acesso Negado",
+	  "mensagem": "Sua sessão expirou. Por favor, faça login novamente."
+	}
+```
+
+*Endpoints*
 ```text
 openapi: 3.0.0
 info:
