@@ -116,6 +116,7 @@ classDiagram
 ## 📊 Dicionário de Dados (Persistência SQLite)
 
 | Campo | Tipo | Restrição | Descrição |
+| :--- | :--- | :--- | :-- |
 | id | INTEGER | PK | Chave Primária Autoincrement |
 | cliente | TEXT | NOT NULL | Nome do cliente ou empresa atendida |
 | status | TEXT | DEFAULT 'P' | "(P)endente, (S)incronizado" |
