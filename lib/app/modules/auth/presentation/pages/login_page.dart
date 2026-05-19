@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../app_routes.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
-// Importe o novo widget do logo
 import '../../../../shared/widgets/app_logo.dart';
 
 class LoginPage extends StatefulWidget {
@@ -58,7 +59,10 @@ class _LoginPageState extends State<LoginPage> {
                   controller: senhaController),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: () => Navigator.pushNamed(context, '/dashboard'),
+                onPressed: () => Navigator.pushReplacementNamed(
+                  context,
+                  AppRoutes.dashboard,
+                ),
                 child: const Text("Entrar"),
               ),
             ],
