@@ -9,12 +9,14 @@ import 'modules/ordens_servico/presentation/pages/ordens_servico_page.dart';
 import 'modules/relatorios/presentation/pages/relatorios_page.dart';
 import 'modules/splash/presentation/pages/splash_page.dart';
 import 'modules/auth/presentation/pages/login_page.dart';
+import 'modules/usuarios/presentation/pages/usuarios_page.dart';
 
 class AppRoutes {
   static const splash = '/splash';
   static const login = '/auth/login';
   static const dashboard = '/dashboard';
   static const clientes = '/clientes';
+  static const usuarios = '/usuarios';
   static const ordensServico = '/ordens-servico';
   static const relatorios = '/relatorios';
   static const laboratorio = '/laboratorio';
@@ -26,6 +28,7 @@ class AppRoutes {
         login: (_) => const LoginPage(),
         dashboard: (_) => const HomePage(),
         clientes: (_) => const ClientesPage(),
+        usuarios: (_) => const UsuariosPage(),
         ordensServico: (_) => const OrdensServicoPage(),
         relatorios: (_) => const RelatoriosPage(),
         laboratorio: (_) => const LaboratorioPage(),

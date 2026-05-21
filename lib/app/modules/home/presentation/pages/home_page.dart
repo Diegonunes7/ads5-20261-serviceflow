@@ -22,6 +22,11 @@ class HomePage extends StatelessWidget {
               rota: AppRoutes.clientes,
             ),
             _MenuCard(
+              titulo: 'Usuarios',
+              icone: Icons.badge_outlined,
+              rota: AppRoutes.usuarios,
+            ),
+            _MenuCard(
               titulo: 'Ordem de Servico',
               icone: Icons.assignment_turned_in_outlined,
               rota: AppRoutes.ordensServico,

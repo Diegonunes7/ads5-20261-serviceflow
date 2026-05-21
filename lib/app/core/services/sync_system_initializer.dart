@@ -1,5 +1,6 @@
 import '../helpers/app.config.dart';
 import '../../modules/clientes/data/cliente.schedule.dart';
+import '../../modules/usuarios/data/usuario.schedule.dart';
 import 'schedule_manager.dart';
 
 class SyncSystemInitializer {
@@ -12,6 +13,7 @@ class SyncSystemInitializer {
 
     final manager = ScheduleManager();
     manager.register(ClienteSchedule());
+    manager.register(UsuarioSchedule());
 
     if (_hasValidRemoteConfig()) {
       manager.startAll();
