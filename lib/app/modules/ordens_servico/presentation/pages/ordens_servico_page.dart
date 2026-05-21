@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../shared/widgets/custom_dropdown_field.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../../data/ordem_servico.repository.dart';
 import '../../domain/ordem_servico.service.dart';
@@ -15,10 +16,10 @@ class OrdensServicoPage extends StatefulWidget {
 
 class _OrdensServicoPageState extends State<OrdensServicoPage> {
   late final OrdensServicoController _controller;
-  late final TextEditingController _clienteIdController;
-  late final TextEditingController _tecnicoIdController;
   late final TextEditingController _observacaoController;
   late final TextEditingController _valorPecasController;
+  int? _selectedClienteId;
+  int? _selectedTecnicoId;
 
   @override
   void initState() {
@@ -32,10 +33,8 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
 
     _controller = OrdensServicoController(service: service);
     _controller.addListener(_onControllerChanged);
-    _controller.loadOrdens();
+    _controller.loadDadosTela();
 
-    _clienteIdController = TextEditingController();
-    _tecnicoIdController = TextEditingController();
     _observacaoController = TextEditingController();
     _valorPecasController = TextEditingController(text: '0');
   }
@@ -44,8 +43,6 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
   void dispose() {
     _controller.removeListener(_onControllerChanged);
     _controller.dispose();
-    _clienteIdController.dispose();
-    _tecnicoIdController.dispose();
     _observacaoController.dispose();
     _valorPecasController.dispose();
     super.dispose();
@@ -90,18 +87,20 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
 
   Future<void> _salvarOrdem() async {
     final saved = await _controller.cadastrarOrdem(
-      clienteIdText: _clienteIdController.text,
-      tecnicoIdText: _tecnicoIdController.text,
+      clienteId: _selectedClienteId,
+      tecnicoId: _selectedTecnicoId,
       observacao: _observacaoController.text,
       valorPecasText: _valorPecasController.text,
     );
 
     if (!saved) return;
 
-    _clienteIdController.clear();
-    _tecnicoIdController.clear();
     _observacaoController.clear();
     _valorPecasController.text = '0';
+    setState(() {
+      _selectedClienteId = null;
+      _selectedTecnicoId = null;
+    });
     FocusScope.of(context).unfocus();
   }
 
@@ -117,6 +116,16 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
         child: AnimatedBuilder(
           animation: _controller,
           builder: (context, _) {
+            final clienteSelecionadoValido = _controller.clientesDisponiveis
+                .any((item) => item.id == _selectedClienteId);
+            final tecnicoSelecionadoValido = _controller.tecnicosDisponiveis
+                .any((item) => item.id == _selectedTecnicoId);
+
+            final clienteAtual =
+                clienteSelecionadoValido ? _selectedClienteId : null;
+            final tecnicoAtual =
+                tecnicoSelecionadoValido ? _selectedTecnicoId : null;
+
             return Stack(
               children: [
                 Column(
@@ -125,16 +134,46 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          CustomTextField(
-                            controller: _clienteIdController,
-                            label: 'ID do cliente',
-                            keyboardType: TextInputType.number,
+                          CustomDropdownField<int>(
+                            label: 'Cliente',
+                            hint: _controller.clientesDisponiveis.isEmpty
+                                ? 'Cadastre clientes ativos primeiro'
+                                : 'Selecione um cliente',
+                            value: clienteAtual,
+                            items: _controller.clientesDisponiveis
+                                .map(
+                                  (cliente) => DropdownMenuItem<int>(
+                                    value: cliente.id,
+                                    child:
+                                        Text('${cliente.id} - ${cliente.nome}'),
+                                  ),
+                                )
+                                .toList(),
+                            isEnabled: _controller.clientesDisponiveis.isNotEmpty,
+                            onChanged: (value) {
+                              setState(() => _selectedClienteId = value);
+                            },
                           ),
                           const SizedBox(height: 12),
-                          CustomTextField(
-                            controller: _tecnicoIdController,
-                            label: 'ID do tecnico',
-                            keyboardType: TextInputType.number,
+                          CustomDropdownField<int>(
+                            label: 'Tecnico',
+                            hint: _controller.tecnicosDisponiveis.isEmpty
+                                ? 'Cadastre tecnicos ativos primeiro'
+                                : 'Selecione um tecnico',
+                            value: tecnicoAtual,
+                            items: _controller.tecnicosDisponiveis
+                                .map(
+                                  (tecnico) => DropdownMenuItem<int>(
+                                    value: tecnico.id,
+                                    child:
+                                        Text('${tecnico.id} - ${tecnico.nome}'),
+                                  ),
+                                )
+                                .toList(),
+                            isEnabled: _controller.tecnicosDisponiveis.isNotEmpty,
+                            onChanged: (value) {
+                              setState(() => _selectedTecnicoId = value);
+                            },
                           ),
                           const SizedBox(height: 12),
                           CustomTextField(
@@ -155,8 +194,11 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed:
-                                  _controller.isLoading ? null : _salvarOrdem,
+                              onPressed: _controller.isLoading ||
+                                      _controller.clientesDisponiveis.isEmpty ||
+                                      _controller.tecnicosDisponiveis.isEmpty
+                                  ? null
+                                  : _salvarOrdem,
                               child: const Text('Salvar O.S.'),
                             ),
                           ),

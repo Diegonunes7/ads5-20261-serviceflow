@@ -10,6 +10,7 @@ class OrdemServicoValidation
   @override
   Future<void> validateCreate(OrdemServico entity) async {
     _validateFields(entity);
+    await _validateReferences(entity);
   }
 
   @override
@@ -18,6 +19,7 @@ class OrdemServicoValidation
       throw Exception('Ordem de servico sem id nao pode ser atualizada.');
     }
     _validateFields(entity);
+    await _validateReferences(entity);
   }
 
   void _validateFields(OrdemServico entity) {
@@ -31,6 +33,18 @@ class OrdemServicoValidation
 
     if (entity.valorPecas < 0) {
       throw Exception('Valor de pecas nao pode ser negativo.');
+    }
+  }
+
+  Future<void> _validateReferences(OrdemServico entity) async {
+    final clienteExiste = await repository.clienteAtivoExiste(entity.clienteId);
+    if (!clienteExiste) {
+      throw Exception('Cliente informado nao existe ou esta inativo.');
+    }
+
+    final tecnicoExiste = await repository.tecnicoAtivoExiste(entity.tecnicoId);
+    if (!tecnicoExiste) {
+      throw Exception('Tecnico informado nao existe ou esta inativo.');
     }
   }
 }
