@@ -12,9 +12,9 @@
 - [x] CI no GitHub Actions (format + analyze + build)
 
 ## Em evolucao
-- [ ] Relatorios com metricas operacionais completas
+- [x] Relatorios locais com metricas e pendencias
 - [ ] Estoque funcional (dados reais, nao placeholder)
-- [ ] Configuracoes funcionais (preferencias e parametros)
+- [x] Configuracoes funcionais (conta, sync e ambiente)
 - [ ] Revisao final de UX e mensagens
 
 ## Validacao de demo (roteiro rapido)
