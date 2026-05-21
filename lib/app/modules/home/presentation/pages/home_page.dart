@@ -137,6 +137,16 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () =>
+                              Navigator.pushNamed(context, AppRoutes.syncQueue),
+                          icon: const Icon(Icons.list_alt_outlined),
+                          label: const Text('Ver fila de sincronizacao'),
+                        ),
+                      ),
                     ],
                   ),
                 ),

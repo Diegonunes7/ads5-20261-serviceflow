@@ -7,6 +7,7 @@ import 'modules/home/presentation/pages/home_page.dart';
 import 'modules/laboratorio/presentation/pages/laboratorio_page.dart';
 import 'modules/ordens_servico/presentation/pages/ordens_servico_page.dart';
 import 'modules/relatorios/presentation/pages/relatorios_page.dart';
+import 'modules/sincronizacao/presentation/pages/sync_queue_page.dart';
 import 'modules/splash/presentation/pages/splash_page.dart';
 import 'modules/auth/presentation/pages/login_page.dart';
 import 'modules/tecnicos/presentation/pages/tecnicos_page.dart';
@@ -21,6 +22,7 @@ class AppRoutes {
   static const usuarios = '/usuarios';
   static const ordensServico = '/ordens-servico';
   static const relatorios = '/relatorios';
+  static const syncQueue = '/sync-queue';
   static const laboratorio = '/laboratorio';
   static const estoque = '/estoque';
   static const configuracoes = '/configuracoes';
@@ -34,6 +36,7 @@ class AppRoutes {
         usuarios: (_) => const UsuariosPage(),
         ordensServico: (_) => const OrdensServicoPage(),
         relatorios: (_) => const RelatoriosPage(),
+        syncQueue: (_) => const SyncQueuePage(),
         laboratorio: (_) => const LaboratorioPage(),
         estoque: (_) => const EstoquePage(),
         configuracoes: (_) => const ConfiguracoesPage(),
