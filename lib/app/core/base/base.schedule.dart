@@ -58,6 +58,6 @@ abstract class BaseSchedule<E extends BaseModel, R extends BaseRepository<E>,
 
   Future<bool> _hasConnection() async {
     final result = await _connectivity.checkConnectivity();
-    return result != ConnectivityResult.none;
+    return result.any((item) => item != ConnectivityResult.none);
   }
 }

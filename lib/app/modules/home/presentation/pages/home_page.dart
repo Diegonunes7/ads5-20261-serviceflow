@@ -17,6 +17,11 @@ class HomePage extends StatelessWidget {
           mainAxisSpacing: 12,
           children: const [
             _MenuCard(
+              titulo: 'Clientes',
+              icone: Icons.people_alt_outlined,
+              rota: AppRoutes.clientes,
+            ),
+            _MenuCard(
               titulo: 'Ordem de Servico',
               icone: Icons.assignment_turned_in_outlined,
               rota: AppRoutes.ordensServico,
