@@ -155,6 +155,11 @@ class _HomePageState extends State<HomePage> {
                     rota: AppRoutes.clientes,
                   ),
                   _MenuCard(
+                    titulo: 'Tecnicos',
+                    icone: Icons.engineering_outlined,
+                    rota: AppRoutes.tecnicos,
+                  ),
+                  _MenuCard(
                     titulo: 'Usuarios',
                     icone: Icons.badge_outlined,
                     rota: AppRoutes.usuarios,

@@ -1,6 +1,7 @@
 import '../helpers/app.config.dart';
 import '../../modules/clientes/data/cliente.schedule.dart';
 import '../../modules/ordens_servico/data/ordem_servico.schedule.dart';
+import '../../modules/tecnicos/data/tecnico.schedule.dart';
 import '../../modules/usuarios/data/usuario.schedule.dart';
 import 'schedule_manager.dart';
 
@@ -14,6 +15,7 @@ class SyncSystemInitializer {
 
     final manager = ScheduleManager();
     manager.register(ClienteSchedule());
+    manager.register(TecnicoSchedule());
     manager.register(OrdemServicoSchedule());
     manager.register(UsuarioSchedule());
 
