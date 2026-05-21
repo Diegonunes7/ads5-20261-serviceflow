@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:serviceflow/app/core/services/auth_service.dart';
 import 'package:serviceflow/app/core/services/sync_system_initializer.dart';
 
 import '../../../../app_routes.dart';
@@ -11,8 +12,33 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final AuthService _authService = AuthService();
   bool _isSyncing = false;
   String _syncSummary = 'Nenhuma sincronizacao manual executada.';
+  String? _loggedUserEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSessionInfo();
+  }
+
+  Future<void> _loadSessionInfo() async {
+    final email = await _authService.getStoredEmail();
+    if (!mounted) return;
+    setState(() => _loggedUserEmail = email);
+  }
+
+  Future<void> _logout() async {
+    await _authService.logout();
+    if (!mounted) return;
+
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AppRoutes.login,
+      (_) => false,
+    );
+  }
 
   Future<void> _syncNow() async {
     if (_isSyncing) return;
@@ -59,7 +85,16 @@ class _HomePageState extends State<HomePage> {
     final runningCount = status['running_count'] as int? ?? 0;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('ServiceFlow - Dashboard')),
+      appBar: AppBar(
+        title: const Text('ServiceFlow - Dashboard'),
+        actions: [
+          IconButton(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sair',
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -78,6 +113,8 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 8),
                       Text('Features registradas: $registeredCount'),
                       Text('Schedules ativos: $runningCount'),
+                      if (_loggedUserEmail != null && _loggedUserEmail!.isNotEmpty)
+                        Text('Usuario: $_loggedUserEmail'),
                       const SizedBox(height: 8),
                       Text(
                         _syncSummary,

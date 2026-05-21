@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:serviceflow/app/core/services/auth_service.dart';
 
 import '../../../../app_routes.dart';
-import '../../../../shared/widgets/custom_text_field.dart';
 import '../../../../shared/widgets/app_logo.dart';
+import '../../../../shared/widgets/custom_text_field.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,58 +13,107 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  late TextEditingController emailController;
-  late TextEditingController senhaController;
+  final AuthService _authService = AuthService();
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    emailController = TextEditingController();
-    senhaController = TextEditingController();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+    _loadStoredEmail();
   }
 
   @override
   void dispose() {
-    emailController.dispose();
-    senhaController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadStoredEmail() async {
+    final lastEmail = await _authService.getStoredEmail();
+    if (!mounted || lastEmail == null || lastEmail.isEmpty) return;
+    _emailController.text = lastEmail;
+  }
+
+  Future<void> _submit() async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _authService.login(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.dashboard,
+        (_) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(error.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Usando Scaffold e Padding para estruturar a tela
     return Scaffold(
-      backgroundColor: Colors.white, // O fundo branco destaca o logo
+      backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
-          // Evita quebra de layout com teclado
-          padding: const EdgeInsets.all(32.0),
+          padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // --- INSERÇÃO DO LOGO ---
-              // Usando o widget reutilizável que criamos
-              Padding(
+              const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10),
                 child: AppLogo(width: double.infinity, height: 250),
               ),
-
-              const SizedBox(height: 48), // Espaçamento entre logo e campos
-
-              // Campos de texto e botão (reaproveitando exemplo anterior)
-              CustomTextField(label: "E-mail", controller: emailController),
+              const SizedBox(height: 48),
+              CustomTextField(
+                label: 'E-mail',
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+              ),
               const SizedBox(height: 16),
               CustomTextField(
-                  label: "Senha",
-                  isPassword: true,
-                  controller: senhaController),
+                label: 'Senha',
+                isPassword: true,
+                controller: _passwordController,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: _submit,
+              ),
               const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () => Navigator.pushReplacementNamed(
-                  context,
-                  AppRoutes.dashboard,
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submit,
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Entrar'),
                 ),
-                child: const Text("Entrar"),
               ),
             ],
           ),

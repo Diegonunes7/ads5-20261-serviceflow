@@ -1,33 +1,34 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:serviceflow/app/core/services/auth_service.dart';
 import 'package:serviceflow/app/shared/widgets/app_logo.dart';
 
 import '../../../../app_routes.dart';
 
 class SplashPage extends StatefulWidget {
   final int maxSeconds;
-  const SplashPage({super.key, this.maxSeconds = 7});
+  const SplashPage({super.key, this.maxSeconds = 2});
 
   @override
   State<SplashPage> createState() => _SplashPageState();
 }
 
 class _SplashPageState extends State<SplashPage> {
-  Timer? _timer;
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer(Duration(seconds: widget.maxSeconds), () {
-      if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(AppRoutes.login);
-    });
+    _redirectBySession();
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  Future<void> _redirectBySession() async {
+    await Future<void>.delayed(Duration(seconds: widget.maxSeconds));
+    final authenticated = await _authService.isAuthenticated();
+
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed(
+      authenticated ? AppRoutes.dashboard : AppRoutes.login,
+    );
   }
 
   @override
@@ -46,8 +47,8 @@ class _SplashPageState extends State<SplashPage> {
               Text('Carregando...'),
               SizedBox(height: 35),
               Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: AppLogo(width: double.infinity, height: 250),
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: AppLogo(width: double.infinity, height: 250),
               ),
             ],
           ),
