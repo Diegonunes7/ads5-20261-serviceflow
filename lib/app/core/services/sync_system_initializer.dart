@@ -30,6 +30,10 @@ class SyncSystemInitializer {
     return ScheduleManager().syncFeature(featureName);
   }
 
+  static Map<String, dynamic> getStatus() {
+    return ScheduleManager().getStatus();
+  }
+
   static bool _hasValidRemoteConfig() {
     return !AppConfig.apiBaseUrl.contains('your-supabase-url');
   }
