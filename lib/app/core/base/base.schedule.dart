@@ -24,6 +24,8 @@ abstract class BaseSchedule<E extends BaseModel, R extends BaseRepository<E>,
 
   Timer? _timer;
 
+  String get featureName;
+
   bool get isRunning => _timer != null;
 
   void start() {
