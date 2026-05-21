@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:serviceflow/app/core/services/auth_service.dart';
+import 'package:serviceflow/app/core/services/demo_seed_service.dart';
 import 'package:serviceflow/app/core/services/sync_system_initializer.dart';
 
 import '../../../../app_routes.dart';
@@ -13,7 +14,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final AuthService _authService = AuthService();
+  final DemoSeedService _demoSeedService = DemoSeedService();
   bool _isSyncing = false;
+  bool _isSeeding = false;
   String _syncSummary = 'Nenhuma sincronizacao manual executada.';
   String? _loggedUserEmail;
 
@@ -74,6 +77,42 @@ class _HomePageState extends State<HomePage> {
     } finally {
       if (mounted) {
         setState(() => _isSyncing = false);
+      }
+    }
+  }
+
+  Future<void> _seedDemoData() async {
+    if (_isSeeding) return;
+
+    setState(() => _isSeeding = true);
+    try {
+      final result = await _demoSeedService.seedBasicData();
+      if (!mounted) return;
+
+      final summary = 'clientes: ${result.clientesCriados}, '
+          'tecnicos: ${result.tecnicosCriados}, '
+          'ordens: ${result.ordensCriadas}';
+
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('Dados demo gerados ($summary).'),
+          ),
+        );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Falha ao gerar dados de demonstracao.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+    } finally {
+      if (mounted) {
+        setState(() => _isSeeding = false);
       }
     }
   }
@@ -145,6 +184,25 @@ class _HomePageState extends State<HomePage> {
                               Navigator.pushNamed(context, AppRoutes.syncQueue),
                           icon: const Icon(Icons.list_alt_outlined),
                           label: const Text('Ver fila de sincronizacao'),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _isSeeding ? null : _seedDemoData,
+                          icon: _isSeeding
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.dataset_linked_outlined),
+                          label: Text(
+                            _isSeeding
+                                ? 'Gerando dados demo...'
+                                : 'Gerar dados demo',
+                          ),
                         ),
                       ),
                     ],
