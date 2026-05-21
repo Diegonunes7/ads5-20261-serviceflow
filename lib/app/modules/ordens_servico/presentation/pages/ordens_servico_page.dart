@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:signature/signature.dart';
 
 import '../../../../shared/widgets/custom_dropdown_field.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
@@ -23,6 +25,7 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
   late final OrdensServicoController _controller;
   late final TextEditingController _observacaoController;
   late final TextEditingController _valorPecasController;
+  late final SignatureController _signatureController;
   final ImagePicker _imagePicker = ImagePicker();
   int? _selectedClienteId;
   int? _selectedTecnicoId;
@@ -46,6 +49,11 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
 
     _observacaoController = TextEditingController();
     _valorPecasController = TextEditingController(text: '0');
+    _signatureController = SignatureController(
+      penStrokeWidth: 2.2,
+      penColor: Colors.black87,
+      exportBackgroundColor: Colors.white,
+    );
   }
 
   @override
@@ -54,6 +62,7 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
     _controller.dispose();
     _observacaoController.dispose();
     _valorPecasController.dispose();
+    _signatureController.dispose();
     super.dispose();
   }
 
@@ -95,6 +104,9 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
   }
 
   Future<void> _salvarOrdem() async {
+    final assinaturaBase64 = await _getAssinaturaBase64();
+    if (!mounted) return;
+
     final saved = await _controller.cadastrarOrdem(
       clienteId: _selectedClienteId,
       tecnicoId: _selectedTecnicoId,
@@ -102,6 +114,7 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
       valorPecasText: _valorPecasController.text,
       fotoAntesPath: _fotoAntesPath,
       fotoDepoisPath: _fotoDepoisPath,
+      assinaturaBase64: assinaturaBase64,
     );
 
     if (!saved) return;
@@ -114,7 +127,28 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
       _fotoAntesPath = null;
       _fotoDepoisPath = null;
     });
+    _signatureController.clear();
     FocusScope.of(context).unfocus();
+  }
+
+  Future<String?> _getAssinaturaBase64() async {
+    try {
+      final assinaturaBytes = await _signatureController.toPngBytes();
+      if (assinaturaBytes == null || assinaturaBytes.isEmpty) return null;
+      return base64Encode(assinaturaBytes);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Nao foi possivel processar a assinatura.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+      }
+      return null;
+    }
   }
 
   Future<void> _capturarFoto({required bool isAntes}) async {
@@ -233,6 +267,43 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
     );
   }
 
+  Widget _buildAssinaturaField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Assinatura digital',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 160,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.black26),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Signature(
+              controller: _signatureController,
+              backgroundColor: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: OutlinedButton.icon(
+            onPressed: _signatureController.clear,
+            icon: const Icon(Icons.clear),
+            label: const Text('Limpar assinatura'),
+          ),
+        ),
+      ],
+    );
+  }
+
   String _syncLabel(int isSync) {
     return isSync == 1 ? 'Sincronizada' : 'Pendente';
   }
@@ -331,6 +402,8 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
                             caminhoFoto: _fotoDepoisPath,
                             onCapture: () => _capturarFoto(isAntes: false),
                           ),
+                          const SizedBox(height: 12),
+                          _buildAssinaturaField(),
                           const SizedBox(height: 16),
                           SizedBox(
                             width: double.infinity,
@@ -371,6 +444,7 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
                                     '\n${_syncLabel(ordem.isSync)}'
                                     '\nFoto antes: ${ordem.fotoAntes?.isNotEmpty == true ? 'Sim' : 'Nao'}'
                                     '\nFoto depois: ${ordem.fotoDepois?.isNotEmpty == true ? 'Sim' : 'Nao'}'
+                                    '\nAssinatura: ${ordem.assinatura?.isNotEmpty == true ? 'Sim' : 'Nao'}'
                                     '${ordem.observacao == null ? '' : '\n${ordem.observacao}'}',
                                   ),
                                   isThreeLine: true,

@@ -77,6 +77,7 @@ class OrdensServicoController extends BaseController<
     required String valorPecasText,
     String? fotoAntesPath,
     String? fotoDepoisPath,
+    String? assinaturaBase64,
   }) async {
     final created = await executeOperation<int>(
       () async {
@@ -101,6 +102,7 @@ class OrdensServicoController extends BaseController<
           valorPecas: valorPecas,
           fotoAntes: fotoAntesPath,
           fotoDepois: fotoDepoisPath,
+          assinatura: assinaturaBase64,
           isSync: 0,
           createdAt: DateTime.now(),
         );
