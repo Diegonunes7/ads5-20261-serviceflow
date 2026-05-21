@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'app/app_widget.dart';
+import 'app/core/helpers/database_helper.dart';
 
-void main() {
-  // 1. Garante a inicialização da comunicação com o sistema nativo
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Exemplo: Aqui deve-se carregar o Banco de Dados ou as Configurações
-  // await DatabaseHelper.instance.init();
+  await DatabaseHelper.instance.initialize();
 
   runApp(const AppEntry());
 }
@@ -17,6 +16,6 @@ class AppEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppWidget();
+    return const AppWidget();
   }
 }

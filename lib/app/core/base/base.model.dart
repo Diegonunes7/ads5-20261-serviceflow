@@ -1,25 +1,38 @@
 abstract class BaseModel {
-  final String? id;
+  final int? id;
+  final int isSync;
   final DateTime? createdAt;
 
-  BaseModel({
+  const BaseModel({
     this.id,
+    this.isSync = 0,
     this.createdAt,
   });
 
-  // Construtor nomeado para criar a base a partir de um Map
   BaseModel.fromMap(Map<String, dynamic> map)
-      : id = map['id'] as String?,
-        createdAt = map['createdAt'] != null
-            ? DateTime.tryParse(map['createdAt'].toString())
-            : null;
+      : id = _parseInt(map['id']),
+        isSync = _parseInt(map['is_sync'] ?? map['isSync']) ?? 0,
+        createdAt = _parseDate(map['created_at'] ?? map['createdAt']);
 
-  // Método para converter os atributos da base para Map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'createdAt':
-          createdAt?.toIso8601String(), // Converte DateTime para String ISO8601
+      'is_sync': isSync,
+      'created_at': createdAt?.toIso8601String(),
     };
+  }
+
+  Map<String, dynamic> toJson() => toMap();
+
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    return DateTime.tryParse(value.toString());
   }
 }
