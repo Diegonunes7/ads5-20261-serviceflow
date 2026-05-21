@@ -1,4 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../shared/widgets/custom_dropdown_field.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
@@ -18,8 +23,12 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
   late final OrdensServicoController _controller;
   late final TextEditingController _observacaoController;
   late final TextEditingController _valorPecasController;
+  final ImagePicker _imagePicker = ImagePicker();
   int? _selectedClienteId;
   int? _selectedTecnicoId;
+  String? _fotoAntesPath;
+  String? _fotoDepoisPath;
+  bool _isCapturandoFoto = false;
 
   @override
   void initState() {
@@ -91,6 +100,8 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
       tecnicoId: _selectedTecnicoId,
       observacao: _observacaoController.text,
       valorPecasText: _valorPecasController.text,
+      fotoAntesPath: _fotoAntesPath,
+      fotoDepoisPath: _fotoDepoisPath,
     );
 
     if (!saved) return;
@@ -100,8 +111,126 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
     setState(() {
       _selectedClienteId = null;
       _selectedTecnicoId = null;
+      _fotoAntesPath = null;
+      _fotoDepoisPath = null;
     });
     FocusScope.of(context).unfocus();
+  }
+
+  Future<void> _capturarFoto({required bool isAntes}) async {
+    if (_isCapturandoFoto) return;
+
+    setState(() => _isCapturandoFoto = true);
+    try {
+      final captured = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 75,
+        maxWidth: 1920,
+      );
+      if (captured == null) return;
+
+      final savedPath = await _persistirEvidencia(
+        captured.path,
+        prefixo: isAntes ? 'antes' : 'depois',
+      );
+
+      if (!mounted) return;
+      setState(() {
+        if (isAntes) {
+          _fotoAntesPath = savedPath;
+        } else {
+          _fotoDepoisPath = savedPath;
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Nao foi possivel capturar a foto.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+    } finally {
+      if (mounted) {
+        setState(() => _isCapturandoFoto = false);
+      }
+    }
+  }
+
+  Future<String> _persistirEvidencia(
+    String origemPath, {
+    required String prefixo,
+  }) async {
+    final docs = await getApplicationDocumentsDirectory();
+    final pastaEvidencias = Directory(p.join(docs.path, 'evidencias_os'));
+    if (!await pastaEvidencias.exists()) {
+      await pastaEvidencias.create(recursive: true);
+    }
+
+    final extensao = p.extension(origemPath).isEmpty
+        ? '.jpg'
+        : p.extension(origemPath);
+    final nomeArquivo =
+        '${prefixo}_${DateTime.now().millisecondsSinceEpoch}$extensao';
+    final destino = p.join(pastaEvidencias.path, nomeArquivo);
+
+    final arquivoCopiado = await File(origemPath).copy(destino);
+    return arquivoCopiado.path;
+  }
+
+  Widget _buildFotoField({
+    required String titulo,
+    required String? caminhoFoto,
+    required VoidCallback onCapture,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          titulo,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        if (caminhoFoto == null)
+          const Text('Nenhuma foto capturada.')
+        else
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.file(
+              File(caminhoFoto),
+              height: 120,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                height: 120,
+                width: double.infinity,
+                color: Colors.black12,
+                alignment: Alignment.center,
+                child: const Text('Nao foi possivel exibir a foto.'),
+              ),
+            ),
+          ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: OutlinedButton.icon(
+            onPressed: _isCapturandoFoto ? null : onCapture,
+            icon: _isCapturandoFoto
+                ? const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.camera_alt_outlined),
+            label: Text(
+              caminhoFoto == null ? 'Capturar foto' : 'Trocar foto',
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   String _syncLabel(int isSync) {
@@ -190,13 +319,26 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
                             textInputAction: TextInputAction.done,
                             onFieldSubmitted: _salvarOrdem,
                           ),
+                          const SizedBox(height: 12),
+                          _buildFotoField(
+                            titulo: 'Foto antes',
+                            caminhoFoto: _fotoAntesPath,
+                            onCapture: () => _capturarFoto(isAntes: true),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildFotoField(
+                            titulo: 'Foto depois',
+                            caminhoFoto: _fotoDepoisPath,
+                            onCapture: () => _capturarFoto(isAntes: false),
+                          ),
                           const SizedBox(height: 16),
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
                               onPressed: _controller.isLoading ||
                                       _controller.clientesDisponiveis.isEmpty ||
-                                      _controller.tecnicosDisponiveis.isEmpty
+                                      _controller.tecnicosDisponiveis.isEmpty ||
+                                      _isCapturandoFoto
                                   ? null
                                   : _salvarOrdem,
                               child: const Text('Salvar O.S.'),
@@ -227,6 +369,8 @@ class _OrdensServicoPageState extends State<OrdensServicoPage> {
                                   subtitle: Text(
                                     'Pecas: R\$ ${ordem.valorPecas.toStringAsFixed(2)}'
                                     '\n${_syncLabel(ordem.isSync)}'
+                                    '\nFoto antes: ${ordem.fotoAntes?.isNotEmpty == true ? 'Sim' : 'Nao'}'
+                                    '\nFoto depois: ${ordem.fotoDepois?.isNotEmpty == true ? 'Sim' : 'Nao'}'
                                     '${ordem.observacao == null ? '' : '\n${ordem.observacao}'}',
                                   ),
                                   isThreeLine: true,

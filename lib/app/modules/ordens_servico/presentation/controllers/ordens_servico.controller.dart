@@ -75,6 +75,8 @@ class OrdensServicoController extends BaseController<
     required int? tecnicoId,
     required String observacao,
     required String valorPecasText,
+    String? fotoAntesPath,
+    String? fotoDepoisPath,
   }) async {
     final created = await executeOperation<int>(
       () async {
@@ -97,6 +99,8 @@ class OrdensServicoController extends BaseController<
           tecnicoId: tecnicoIdValue,
           observacao: observacao.trim().isEmpty ? null : observacao.trim(),
           valorPecas: valorPecas,
+          fotoAntes: fotoAntesPath,
+          fotoDepois: fotoDepoisPath,
           isSync: 0,
           createdAt: DateTime.now(),
         );
